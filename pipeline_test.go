@@ -668,6 +668,55 @@ func TestRegexPaths(t *testing.T) {
 				{Trigger: "service-1"},
 			},
 		},
+		"regex and non-regex watch blocks work independently": {
+			ChangedFiles: []string{
+				"src/components/Button.tsx",
+				"services/api/main.go",
+			},
+			WatchConfigs: []WatchConfig{
+				{
+					Paths:      []string{`src/(?!__tests__/).*\.tsx`},
+					RegexPaths: true,
+					Step:       Step{Trigger: "frontend"},
+				},
+				{
+					Paths: []string{"services/api/"},
+					Step:  Step{Trigger: "backend"},
+				},
+			},
+			Expected: []Step{
+				{Trigger: "frontend"},
+				{Trigger: "backend"},
+			},
+		},
+		"invalid regex in skip_path returns error": {
+			ChangedFiles: []string{
+				"src/main.go",
+			},
+			WatchConfigs: []WatchConfig{
+				{
+					Paths:      []string{`src/.*`},
+					SkipPaths:  []string{`src/[invalid`},
+					RegexPaths: true,
+					Step:       Step{Trigger: "service-1"},
+				},
+			},
+			Expected:    []Step{},
+			ExpectError: true,
+		},
+		"regex does not match unrelated file": {
+			ChangedFiles: []string{
+				"docs/readme.md",
+			},
+			WatchConfigs: []WatchConfig{
+				{
+					Paths:      []string{`src/.*\.go`},
+					RegexPaths: true,
+					Step:       Step{Trigger: "service-1"},
+				},
+			},
+			Expected: []Step{},
+		},
 	}
 
 	for name, tc := range testCases {
