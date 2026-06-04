@@ -1,0 +1,69 @@
+steps:
+  # Step 1: build the binary from local source so the plugin uses our code
+  - label: "Build binary from source"
+    key: "build"
+    command: "go build -o monorepo-diff-buildkite-plugin ."
+    artifact_paths: "monorepo-diff-buildkite-plugin"
+
+  # Step 2: run all 5 group attribute tests against the locally built binary
+  - label: "SUP-6862: group step attributes"
+    depends_on: "build"
+    env:
+      # tells the hook to skip downloading and use the binary in the current dir
+      BUILDKITE_PLUGIN_MONOREPO_DIFF_BUILDKITE_PLUGIN_TEST_MODE: "true"
+    command: buildkite-agent artifact download monorepo-diff-buildkite-plugin . && chmod +x monorepo-diff-buildkite-plugin
+    plugins:
+      - monorepo-diff#v1.10.0:
+          # emit one changed path per watch so every test case fires
+          diff: "printf 'services/api/main.go\nservices/web/main.go\nservices/worker/main.go\nservices/jobs/main.go\n'"
+          watch:
+
+            # Test 1: depends_on on a group step
+            - path: "services/api/"
+              config:
+                group: "Test 1 — depends_on on group"
+                depends_on: "build"
+                steps:
+                  - label: "API deploy"
+                    command: "echo api-deploy"
+
+            # Test 2: if on a group step
+            - path: "services/web/"
+              config:
+                group: "Test 2 — if on group"
+                if: "build.branch == 'main'"
+                steps:
+                  - label: "Web deploy"
+                    command: "echo web-deploy"
+
+            # Test 3: notify on a group step
+            - path: "services/worker/"
+              config:
+                group: "Test 3 — notify on group"
+                notify:
+                  - slack: "#deployments"
+                    if: "build.state == 'passed'"
+                steps:
+                  - label: "Worker deploy"
+                    command: "echo worker-deploy"
+
+            # Test 4: allow_dependency_failure on a group step
+            - path: "services/jobs/"
+              config:
+                group: "Test 4 — allow_dependency_failure on group"
+                depends_on: "build"
+                allow_dependency_failure: true
+                steps:
+                  - label: "Jobs deploy"
+                    command: "echo jobs-deploy"
+
+            # Test 5: all 4 attributes on single-step shorthand (no explicit steps)
+            - path: "services/api/"
+              config:
+                group: "Test 5 — all attrs, single-step shorthand"
+                depends_on: "build"
+                if: "build.branch == 'main'"
+                allow_dependency_failure: true
+                notify:
+                  - slack: "#deployments"
+                command: "echo all-attrs-shorthand"

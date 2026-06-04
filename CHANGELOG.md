@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+* Propagate `depends_on`, `if`, `notify`, and `allow_dependency_failure` to group steps — these were silently dropped during marshalling [#171](https://github.com/buildkite-plugins/monorepo-diff-buildkite-plugin/issues/171)
+
 ## [v1.10.0](https://github.com/buildkite-plugins/monorepo-diff-buildkite-plugin/compare/v1.9.1...v1.10.0) (2026-05-22)
 
 ### Added

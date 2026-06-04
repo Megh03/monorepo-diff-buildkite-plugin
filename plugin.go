@@ -47,9 +47,13 @@ type WatchConfig struct {
 }
 
 type Group struct {
-	Label string `yaml:"group"`
-	Key   string `yaml:"key,omitempty"`
-	Steps []Step `yaml:"steps"`
+	Label                  string       `yaml:"group"`
+	Key                    string       `yaml:"key,omitempty"`
+	Steps                  []Step       `yaml:"steps"`
+	DependsOn              interface{}  `yaml:"depends_on,omitempty"`
+	Condition              string       `yaml:"if,omitempty"`
+	Notify                 []StepNotify `yaml:"notify,omitempty"`
+	AllowDependencyFailure bool         `yaml:"allow_dependency_failure,omitempty"`
 }
 
 // GithubStatusNotification is notification config for github_commit_status
@@ -97,9 +101,10 @@ type Step struct {
 	RawNotify     []map[string]interface{} `json:"notify" yaml:",omitempty"`
 	Notify        []StepNotify             `yaml:"notify,omitempty"`
 	DependsOn     interface{}              `json:"depends_on" yaml:"depends_on,omitempty"`
-	Key           string                   `yaml:"key,omitempty"`
-	Secrets       interface{}              `json:"secrets,omitempty" yaml:"secrets,omitempty"`
-	Steps         []Step                   `yaml:"steps,omitempty"`
+	Key                    string                   `yaml:"key,omitempty"`
+	Secrets                interface{}              `json:"secrets,omitempty" yaml:"secrets,omitempty"`
+	Steps                  []Step                   `yaml:"steps,omitempty"`
+	AllowDependencyFailure bool                     `json:"allow_dependency_failure,omitempty" yaml:"allow_dependency_failure,omitempty"`
 }
 
 // isValid checks if a step has required fields (command, trigger, or group with steps)
